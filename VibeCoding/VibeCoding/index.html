@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Канбан-доска</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <header>
+        <h1>Канбан-доска</h1>
+    </header>
+
+    <main class="board">
+        <div class="column" data-status="todo">
+            <h2>К выполнению</h2>
+            <div class="cards"></div>
+            <div class="add-task-form">
+                <input type="text" class="task-input" placeholder="Название задачи..." maxlength="120">
+                <button class="add-task-btn" type="button">Добавить</button>
+            </div>
+        </div>
+        <div class="column" data-status="progress">
+            <h2>В работе</h2>
+            <div class="cards"></div>
+            <div class="add-task-form">
+                <input type="text" class="task-input" placeholder="Название задачи..." maxlength="120">
+                <button class="add-task-btn" type="button">Добавить</button>
+            </div>
+        </div>
+        <div class="column" data-status="done">
+            <h2>Готово</h2>
+            <div class="cards"></div>
+            <div class="add-task-form">
+                <input type="text" class="task-input" placeholder="Название задачи..." maxlength="120">
+                <button class="add-task-btn" type="button">Добавить</button>
+            </div>
+        </div>
+    </main>
+
+    <script src="js/script.js"></script>
+</body>
+</html>
+
