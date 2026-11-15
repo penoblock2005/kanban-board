@@ -1,5 +1,5 @@
 /**
- * Канбан-доска — Итерация 5
+ * Канбан-доска — Итерация 7
  *
  * Возможности:
  *  - Добавление карточки по кнопке или Enter
@@ -10,6 +10,8 @@
  *  - Индикатор наличия описания (синяя точка)
  *  - Бейдж приоритета на карточке (низкий/средний/высокий)
  *  - Отображение дедлайна, подсветка просроченных дат
+ *  - Панель инструментов: поиск по названию/описанию, фильтр по приоритету
+ *  - Счётчики задач в заголовках колонок
  *  - Сохранение всех данных в LocalStorage
  */
 
@@ -81,6 +83,7 @@
         input.value = '';
         input.focus();
         saveCards();
+        applyFilters();
     }
 
     /* ===================== Создание карточки ===================== */
@@ -167,6 +170,7 @@
             setTimeout(function () {
                 card.remove();
                 saveCards();
+                applyFilters();
             }, 200);
         });
         actions.appendChild(deleteBtn);
@@ -234,6 +238,7 @@
                 paragraph.textContent = newText;
                 card.dataset.title = newText;
                 saveCards();
+                applyFilters();
             }
             input.replaceWith(paragraph);
             paragraph.style.display = '';
@@ -335,6 +340,7 @@
         }
 
         saveCards();
+        applyFilters();
         closeModal();
     });
 
@@ -376,6 +382,7 @@
         if (draggedCard) {
             this.appendChild(draggedCard);
             saveCards();
+            applyFilters();
         }
     }
 
@@ -394,6 +401,78 @@
             col.classList.remove('drag-over');
         });
     });
+
+    /* ===================== Поиск и фильтрация ===================== */
+
+    var searchInput = document.getElementById('searchInput');
+    var priorityFilter = document.getElementById('priorityFilter');
+    var toolbarResults = document.getElementById('toolbarResults');
+
+    searchInput.addEventListener('input', applyFilters);
+    priorityFilter.addEventListener('change', applyFilters);
+
+    function applyFilters() {
+        var query = searchInput.value.trim().toLowerCase();
+        var filterPriority = priorityFilter.value;
+        var visibleCount = 0;
+        var totalCount = document.querySelectorAll('.card').length;
+
+        document.querySelectorAll('.card').forEach(function (card) {
+            var title = (card.querySelector('.card p') || {}).textContent || '';
+            var description = card.dataset.description || '';
+            var priority = card.dataset.priority || '';
+
+            var matchesSearch = !query ||
+                title.toLowerCase().indexOf(query) !== -1 ||
+                description.toLowerCase().indexOf(query) !== -1;
+
+            var matchesPriority = !filterPriority || priority === filterPriority;
+
+            if (matchesSearch && matchesPriority) {
+                card.style.display = '';
+                visibleCount++;
+            } else {
+                card.style.display = 'none';
+            }
+        });
+
+        /* Обновить счётчики колонок */
+        updateColumnCounts();
+
+        /* Обновить счётчик результатов */
+        if (query || filterPriority) {
+            toolbarResults.textContent = 'Найдено: ' + visibleCount + ' из ' + totalCount;
+        } else {
+            toolbarResults.textContent = '';
+        }
+    }
+
+    function updateColumnCounts() {
+        document.querySelectorAll('.column').forEach(function (column) {
+            var cardsContainer = column.querySelector('.cards');
+            var allCards = cardsContainer.querySelectorAll('.card');
+            var visibleCards = cardsContainer.querySelectorAll('.card:not([style*="display: none"])');
+            var count = visibleCards.length;
+
+            var countEl = column.querySelector('.column-count');
+            if (!countEl) {
+                countEl = document.createElement('span');
+                countEl.className = 'column-count';
+                var h2 = column.querySelector('h2');
+                if (h2) {
+                    h2.appendChild(countEl);
+                }
+            }
+
+            countEl.textContent = count;
+
+            if (count > 0) {
+                countEl.classList.add('has-cards');
+            } else {
+                countEl.classList.remove('has-cards');
+            }
+        });
+    }
 
     /* ===================== Загрузка из LocalStorage ===================== */
 
@@ -418,6 +497,8 @@
                 container.appendChild(card);
             }
         });
+
+        updateColumnCounts();
     }
 
     init();

@@ -29,6 +29,82 @@ header h1 {
     letter-spacing: -0.3px;
 }
 
+/* ===== Панель инструментов ===== */
+.toolbar {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 16px 28px;
+    background: #ffffff;
+    border-bottom: 1px solid #e2e8f0;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+}
+
+.toolbar-search {
+    position: relative;
+    flex: 1;
+    max-width: 360px;
+}
+
+.toolbar-search-icon {
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #a0aec0;
+    pointer-events: none;
+}
+
+.toolbar-input {
+    width: 100%;
+    padding: 10px 12px 10px 36px;
+    border: 2px solid #e2e8f0;
+    border-radius: 8px;
+    font-size: 0.85rem;
+    font-family: inherit;
+    color: #2d3748;
+    background: #f7fafc;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+    outline: none;
+}
+
+.toolbar-input::placeholder {
+    color: #a0aec0;
+}
+
+.toolbar-input:focus {
+    border-color: #667eea;
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.15);
+    background: #fff;
+}
+
+.toolbar-filter select {
+    padding: 10px 12px;
+    border: 2px solid #e2e8f0;
+    border-radius: 8px;
+    font-size: 0.85rem;
+    font-family: inherit;
+    color: #2d3748;
+    background: #f7fafc;
+    outline: none;
+    cursor: pointer;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    min-width: 160px;
+}
+
+.toolbar-filter select:focus {
+    border-color: #667eea;
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.15);
+    background: #fff;
+}
+
+.toolbar-results {
+    font-size: 0.8rem;
+    color: #718096;
+    white-space: nowrap;
+    margin-left: auto;
+}
+
 /* ===== Доска ===== */
 .board {
     display: flex;
@@ -62,6 +138,94 @@ header h1 {
     border-bottom: 2px solid #e2e8f0;
     margin-bottom: 12px;
     color: #4a5568;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    user-select: none;
+    position: relative;
+}
+
+/* Счётчик задач в заголовке колонки */
+.column-count {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 22px;
+    height: 22px;
+    padding: 0 6px;
+    border-radius: 11px;
+    background: #e2e8f0;
+    color: #4a5568;
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0;
+    text-transform: none;
+    transition: background 0.2s ease, color 0.2s ease;
+}
+
+.column-count.has-cards {
+    background: #667eea;
+    color: #fff;
+}
+
+/* Кнопки управления колонкой */
+.column-header-actions {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    opacity: 0;
+    transition: opacity 0.15s ease;
+    margin-left: auto;
+}
+
+.column:hover .column-header-actions,
+.column-header-actions.visible {
+    opacity: 1;
+}
+
+.column-action-btn {
+    width: 22px;
+    height: 22px;
+    border: none;
+    background: transparent;
+    color: #a0aec0;
+    font-size: 0.75rem;
+    cursor: pointer;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.15s ease, color 0.15s ease;
+    line-height: 1;
+    padding: 0;
+}
+
+.column-action-btn:hover {
+    background: #edf2f7;
+    color: #4a5568;
+}
+
+.column-action-btn.delete-col:hover {
+    background: #fed7d7;
+    color: #e53e3e;
+}
+
+/* Inline-редактирование заголовка колонки */
+.column-title-input {
+    font-size: 0.9rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    color: #4a5568;
+    border: 1px solid #667eea;
+    border-radius: 4px;
+    padding: 2px 6px;
+    outline: none;
+    background: #f7fafc;
+    box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.15);
+    width: 100%;
+    font-family: inherit;
 }
 
 /* ===== Список карточек ===== */
@@ -467,6 +631,42 @@ header h1 {
 
 .modal-btn-secondary:hover {
     background: #e2e8f0;
+}
+
+/* ===== Кнопка добавления колонки ===== */
+.add-column-area {
+    padding: 0 28px 28px;
+    display: flex;
+    justify-content: center;
+}
+
+.add-column-btn {
+    padding: 12px 28px;
+    border: 2px dashed #cbd5e0;
+    background: transparent;
+    color: #718096;
+    font-size: 0.9rem;
+    font-weight: 600;
+    font-family: inherit;
+    cursor: pointer;
+    border-radius: 10px;
+    transition: border-color 0.2s ease, color 0.2s ease, background 0.2s ease;
+}
+
+.add-column-btn:hover {
+    border-color: #667eea;
+    color: #667eea;
+    background: rgba(102, 126, 234, 0.04);
+}
+
+/* Кнопка удаления в модальном окне */
+.modal-btn-danger {
+    background: #e53e3e;
+    color: #fff;
+}
+
+.modal-btn-danger:hover {
+    background: #c53030;
 }
 
 /* ===== Адаптивность ===== */
