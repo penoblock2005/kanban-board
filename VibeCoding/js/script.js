@@ -1,14 +1,16 @@
 /**
- * Канбан-доска — Итерация 4
+ * Канбан-доска — Итерация 5
  *
  * Возможности:
  *  - Добавление карточки по кнопке или Enter
  *  - Удаление карточки кнопкой ×
  *  - Drag & Drop между колонками
  *  - Inline-редактирование заголовка по двойному клику
- *  - Модальное окно для описания задачи (клик по карточке)
+ *  - Модальное окно для описания, приоритета и дедлайна
  *  - Индикатор наличия описания (синяя точка)
- *  - Сохранение в LocalStorage
+ *  - Бейдж приоритета на карточке (низкий/средний/высокий)
+ *  - Отображение дедлайна, подсветка просроченных дат
+ *  - Сохранение всех данных в LocalStorage
  */
 
 (function () {
@@ -34,6 +36,8 @@
                 id: cardEl.dataset.id,
                 text: cardEl.querySelector('.card p').textContent,
                 description: cardEl.dataset.description || '',
+                priority: cardEl.dataset.priority || '',
+                deadline: cardEl.dataset.deadline || '',
                 column: cardEl.closest('.column').dataset.status
             });
         });
@@ -72,7 +76,7 @@
             return;
         }
 
-        var card = createCard(text, '');
+        var card = createCard(text, '', '', '');
         cardsContainer.appendChild(card);
         input.value = '';
         input.focus();
@@ -81,15 +85,17 @@
 
     /* ===================== Создание карточки ===================== */
 
-    function createCard(text, description) {
+    function createCard(text, description, priority, deadline) {
         var id = generateId();
         var card = document.createElement('div');
         card.className = 'card';
         card.draggable = true;
         card.dataset.id = id;
         card.dataset.description = description || '';
+        card.dataset.priority = priority || '';
+        card.dataset.deadline = deadline || '';
 
-        /* Тело: текст + индикатор + иконки */
+        /* Тело: текст + индикатор + мета + иконки */
         var body = document.createElement('div');
         body.className = 'card-body';
 
@@ -106,6 +112,29 @@
         paragraph.textContent = text;
         body.appendChild(paragraph);
 
+        /* Мета-блок: приоритет + дедлайн */
+        var meta = document.createElement('div');
+        meta.className = 'card-meta';
+
+        if (priority) {
+            var badge = document.createElement('span');
+            badge.className = 'priority-badge ' + priority;
+            badge.textContent = getPriorityLabel(priority);
+            meta.appendChild(badge);
+        }
+
+        if (deadline) {
+            var deadlineEl = document.createElement('span');
+            deadlineEl.className = 'card-deadline';
+            var isOverdue = isDateOverdue(deadline);
+            if (isOverdue) {
+                deadlineEl.classList.add('overdue');
+            }
+            deadlineEl.textContent = formatDate(deadline) + (isOverdue ? ' (просрочено)' : '');
+            meta.appendChild(deadlineEl);
+        }
+
+        body.appendChild(meta);
         card.appendChild(body);
 
         /* Панель иконок */
@@ -159,6 +188,31 @@
         return card;
     }
 
+    /* ===================== Утилиты для приоритета и даты ===================== */
+
+    function getPriorityLabel(priority) {
+        var labels = {
+            low: 'Низкий',
+            medium: 'Средний',
+            high: 'Высокий'
+        };
+        return labels[priority] || '';
+    }
+
+    function formatDate(dateStr) {
+        if (!dateStr) return '';
+        var parts = dateStr.split('-');
+        return parts[2] + '.' + parts[1];
+    }
+
+    function isDateOverdue(dateStr) {
+        if (!dateStr) return false;
+        var today = new Date();
+        today.setHours(0, 0, 0, 0);
+        var deadline = new Date(dateStr + 'T00:00:00');
+        return deadline < today;
+    }
+
     /* ===================== Inline-редактирование заголовка ===================== */
 
     function startInlineEdit(card, paragraph) {
@@ -202,6 +256,8 @@
 
     var overlay = document.getElementById('modalOverlay');
     var textarea = document.getElementById('modalDescription');
+    var prioritySelect = document.getElementById('modalPriority');
+    var deadlineInput = document.getElementById('modalDeadline');
     var saveBtn = overlay.querySelector('.modal-btn-primary');
     var cancelBtn = overlay.querySelector('.modal-btn-secondary');
     var closeBtn = overlay.querySelector('.modal-close');
@@ -210,6 +266,8 @@
     function openModal(card) {
         currentCard = card;
         textarea.value = card.dataset.description || '';
+        prioritySelect.value = card.dataset.priority || '';
+        deadlineInput.value = card.dataset.deadline || '';
         overlay.classList.add('active');
         setTimeout(function () {
             textarea.focus();
@@ -223,11 +281,19 @@
 
     saveBtn.addEventListener('click', function () {
         if (!currentCard) return;
-        var desc = textarea.value.trim();
-        currentCard.dataset.description = desc;
 
-        /* Обновить индикатор */
+        var desc = textarea.value.trim();
+        var priority = prioritySelect.value;
+        var deadline = deadlineInput.value;
+
+        currentCard.dataset.description = desc;
+        currentCard.dataset.priority = priority;
+        currentCard.dataset.deadline = deadline;
+
+        /* Обновить тело карточки */
         var body = currentCard.querySelector('.card-body');
+
+        /* Индикатор описания */
         var existingIndicator = body.querySelector('.description-indicator');
         if (desc && !existingIndicator) {
             var indicator = document.createElement('div');
@@ -237,6 +303,35 @@
             body.insertBefore(indicator, paragraph);
         } else if (!desc && existingIndicator) {
             existingIndicator.remove();
+        }
+
+        /* Обновить мета-блок (приоритет + дедлайн) */
+        var existingMeta = body.querySelector('.card-meta');
+        if (existingMeta) existingMeta.remove();
+
+        if (priority || deadline) {
+            var meta = document.createElement('div');
+            meta.className = 'card-meta';
+
+            if (priority) {
+                var badge = document.createElement('span');
+                badge.className = 'priority-badge ' + priority;
+                badge.textContent = getPriorityLabel(priority);
+                meta.appendChild(badge);
+            }
+
+            if (deadline) {
+                var deadlineEl = document.createElement('span');
+                deadlineEl.className = 'card-deadline';
+                var isOverdue = isDateOverdue(deadline);
+                if (isOverdue) {
+                    deadlineEl.classList.add('overdue');
+                }
+                deadlineEl.textContent = formatDate(deadline) + (isOverdue ? ' (просрочено)' : '');
+                meta.appendChild(deadlineEl);
+            }
+
+            body.appendChild(meta);
         }
 
         saveCards();
@@ -313,7 +408,12 @@
         cardsData.forEach(function (data) {
             var container = columns[data.column];
             if (container) {
-                var card = createCard(data.text || 'Без названия', data.description || '');
+                var card = createCard(
+                    data.text || 'Без названия',
+                    data.description || '',
+                    data.priority || '',
+                    data.deadline || ''
+                );
                 card.dataset.id = data.id;
                 container.appendChild(card);
             }

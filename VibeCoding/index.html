@@ -47,7 +47,18 @@
             </div>
             <div class="modal-body">
                 <label for="modalDescription">Описание</label>
-                <textarea id="modalDescription" class="modal-textarea" placeholder="Добавьте описание задачи..." rows="6"></textarea>
+                <textarea id="modalDescription" class="modal-textarea" placeholder="Добавьте описание задачи..." rows="4"></textarea>
+
+                <label for="modalPriority">Приоритет</label>
+                <select id="modalPriority" class="modal-select">
+                    <option value="">Без приоритета</option>
+                    <option value="low">Низкий</option>
+                    <option value="medium">Средний</option>
+                    <option value="high">Высокий</option>
+                </select>
+
+                <label for="modalDeadline">Дедлайн</label>
+                <input type="date" id="modalDeadline" class="modal-date">
             </div>
             <div class="modal-footer">
                 <button class="modal-btn modal-btn-secondary" type="button">Отмена</button>

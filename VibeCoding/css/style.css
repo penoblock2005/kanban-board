@@ -37,13 +37,14 @@ header h1 {
     overflow-x: auto;
     min-height: calc(100vh - 80px);
     align-items: flex-start;
+    justify-content: center;
 }
 
 /* ===== Колонка ===== */
 .column {
-    flex: 1;
-    min-width: 280px;
-    max-width: 340px;
+    flex: 1 1 300px;
+    max-width: 380px;
+    min-width: 300px;
     background: #ffffff;
     border-radius: 12px;
     padding: 16px;
@@ -109,6 +110,7 @@ header h1 {
     gap: 6px;
     flex: 1;
     min-width: 0;
+    flex-direction: column;
 }
 
 .card p {
@@ -119,7 +121,59 @@ header h1 {
     flex: 1;
 }
 
-/* Inline-редактирование заголовка */
+/* Мета-информация карточки (приоритет + дедлайн) */
+.card-meta {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 6px;
+    flex-wrap: wrap;
+}
+
+/* ===== Бейдж приоритета ===== */
+.priority-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 0.7rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    line-height: 1.4;
+}
+
+.priority-badge.low {
+    background: #c6f6d5;
+    color: #276749;
+}
+
+.priority-badge.medium {
+    background: #fefcbf;
+    color: #975a16;
+}
+
+.priority-badge.high {
+    background: #fed7d7;
+    color: #c53030;
+}
+
+/* ===== Дедлайн на карточке ===== */
+.card-deadline {
+    font-size: 0.75rem;
+    color: #718096;
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+}
+
+.card-deadline.overdue {
+    color: #e53e3e;
+    font-weight: 600;
+}
+
+/* ===== Inline-редактирование заголовка ===== */
 .card-title-input {
     flex: 1;
     font-size: 0.9rem;
@@ -182,30 +236,6 @@ header h1 {
     background: #667eea;
     flex-shrink: 0;
     margin-top: 5px;
-}
-
-/* ===== Кнопка удаления (старый стиль, для совместимости) ===== */
-.delete-btn {
-    flex-shrink: 0;
-    width: 24px;
-    height: 24px;
-    border: none;
-    background: transparent;
-    color: #a0aec0;
-    font-size: 1.1rem;
-    cursor: pointer;
-    border-radius: 4px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: background 0.15s ease, color 0.15s ease;
-    line-height: 1;
-    margin-top: -2px;
-}
-
-.delete-btn:hover {
-    background: #fed7d7;
-    color: #e53e3e;
 }
 
 /* ===== Форма добавления ===== */
@@ -340,6 +370,9 @@ header h1 {
     padding: 16px 20px;
     flex: 1;
     overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
 }
 
 .modal-body label {
@@ -347,14 +380,14 @@ header h1 {
     font-size: 0.8rem;
     font-weight: 600;
     color: #4a5568;
-    margin-bottom: 8px;
+    margin-bottom: 6px;
     text-transform: uppercase;
     letter-spacing: 0.5px;
 }
 
 .modal-textarea {
     width: 100%;
-    min-height: 120px;
+    min-height: 100px;
     padding: 12px;
     border: 2px solid #e2e8f0;
     border-radius: 8px;
@@ -368,6 +401,28 @@ header h1 {
 }
 
 .modal-textarea:focus {
+    border-color: #667eea;
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.15);
+    background: #fff;
+}
+
+.modal-select,
+.modal-date {
+    width: 100%;
+    padding: 10px 12px;
+    border: 2px solid #e2e8f0;
+    border-radius: 8px;
+    font-size: 0.85rem;
+    font-family: inherit;
+    color: #2d3748;
+    background: #f7fafc;
+    outline: none;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    cursor: pointer;
+}
+
+.modal-select:focus,
+.modal-date:focus {
     border-color: #667eea;
     box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.15);
     background: #fff;
