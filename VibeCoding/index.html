@@ -38,6 +38,24 @@
         </div>
     </main>
 
+    <!-- ===== Модальное окно ===== -->
+    <div class="modal-overlay" id="modalOverlay">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 class="modal-title">Описание задачи</h3>
+                <button class="modal-close" type="button">&times;</button>
+            </div>
+            <div class="modal-body">
+                <label for="modalDescription">Описание</label>
+                <textarea id="modalDescription" class="modal-textarea" placeholder="Добавьте описание задачи..." rows="6"></textarea>
+            </div>
+            <div class="modal-footer">
+                <button class="modal-btn modal-btn-secondary" type="button">Отмена</button>
+                <button class="modal-btn modal-btn-primary" type="button">Сохранить</button>
+            </div>
+        </div>
+    </div>
+
     <script src="js/script.js"></script>
 </body>
 </html>

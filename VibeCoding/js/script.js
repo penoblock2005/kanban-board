@@ -1,15 +1,50 @@
 /**
- * Канбан-доска — полная клиентская версия
+ * Канбан-доска — Итерация 4
  *
  * Возможности:
  *  - Добавление карточки по кнопке или Enter
  *  - Удаление карточки кнопкой ×
  *  - Drag & Drop между колонками
- *  - Подсветка колонки при перетаскивании
+ *  - Inline-редактирование заголовка по двойному клику
+ *  - Модальное окно для описания задачи (клик по карточке)
+ *  - Индикатор наличия описания (синяя точка)
+ *  - Сохранение в LocalStorage
  */
 
 (function () {
     'use strict';
+
+    /* ===================== Хранилище (LocalStorage) ===================== */
+
+    var STORAGE_KEY = 'kanban-cards';
+
+    function loadCards() {
+        try {
+            var data = localStorage.getItem(STORAGE_KEY);
+            return data ? JSON.parse(data) : [];
+        } catch (e) {
+            return [];
+        }
+    }
+
+    function saveCards() {
+        var cards = [];
+        document.querySelectorAll('.card').forEach(function (cardEl) {
+            cards.push({
+                id: cardEl.dataset.id,
+                text: cardEl.querySelector('.card p').textContent,
+                description: cardEl.dataset.description || '',
+                column: cardEl.closest('.column').dataset.status
+            });
+        });
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(cards));
+    }
+
+    /* ===================== Генерация ID ===================== */
+
+    function generateId() {
+        return Date.now().toString(36) + Math.random().toString(36).substr(2, 5);
+    }
 
     /* ===================== Добавление карточки ===================== */
 
@@ -18,12 +53,10 @@
         var button = form.querySelector('.add-task-btn');
         var cardsContainer = form.previousElementSibling;
 
-        // Клик по кнопке
         button.addEventListener('click', function () {
             addCard(input, cardsContainer);
         });
 
-        // Нажатие Enter в поле ввода
         input.addEventListener('keydown', function (e) {
             if (e.key === 'Enter') {
                 e.preventDefault();
@@ -39,42 +72,189 @@
             return;
         }
 
-        var card = createCard(text);
+        var card = createCard(text, '');
         cardsContainer.appendChild(card);
         input.value = '';
         input.focus();
+        saveCards();
     }
 
     /* ===================== Создание карточки ===================== */
 
-    function createCard(text) {
+    function createCard(text, description) {
+        var id = generateId();
         var card = document.createElement('div');
         card.className = 'card';
         card.draggable = true;
+        card.dataset.id = id;
+        card.dataset.description = description || '';
 
-        // Текст задачи
+        /* Тело: текст + индикатор + иконки */
+        var body = document.createElement('div');
+        body.className = 'card-body';
+
+        /* Индикатор описания */
+        if (description) {
+            var indicator = document.createElement('div');
+            indicator.className = 'description-indicator';
+            indicator.title = 'Есть описание';
+            body.appendChild(indicator);
+        }
+
+        /* Текст заголовка */
         var paragraph = document.createElement('p');
         paragraph.textContent = text;
-        card.appendChild(paragraph);
+        body.appendChild(paragraph);
 
-        // Кнопка удаления
+        card.appendChild(body);
+
+        /* Панель иконок */
+        var actions = document.createElement('div');
+        actions.className = 'card-actions';
+
+        /* Кнопка описания */
+        var descBtn = document.createElement('button');
+        descBtn.className = 'card-icon-btn';
+        descBtn.type = 'button';
+        descBtn.title = 'Описание';
+        descBtn.innerHTML = '&#128203;';
+        descBtn.addEventListener('click', function (e) {
+            e.stopPropagation();
+            openModal(card);
+        });
+        actions.appendChild(descBtn);
+
+        /* Кнопка удаления */
         var deleteBtn = document.createElement('button');
-        deleteBtn.className = 'delete-btn';
+        deleteBtn.className = 'card-icon-btn delete-btn';
         deleteBtn.type = 'button';
         deleteBtn.title = 'Удалить задачу';
         deleteBtn.innerHTML = '&times;';
-        deleteBtn.addEventListener('click', function () {
+        deleteBtn.addEventListener('click', function (e) {
+            e.stopPropagation();
             card.style.transition = 'opacity 0.2s ease, transform 0.2s ease';
             card.style.opacity = '0';
             card.style.transform = 'translateX(30px)';
             setTimeout(function () {
                 card.remove();
+                saveCards();
             }, 200);
         });
-        card.appendChild(deleteBtn);
+        actions.appendChild(deleteBtn);
+
+        card.appendChild(actions);
+
+        /* Двойной клик — inline-редактирование заголовка */
+        card.addEventListener('dblclick', function (e) {
+            if (e.target.closest('.card-actions')) return;
+            startInlineEdit(card, paragraph);
+        });
+
+        /* Одинарный клик — открыть модалку */
+        card.addEventListener('click', function (e) {
+            if (e.target.closest('.card-actions')) return;
+            openModal(card);
+        });
 
         return card;
     }
+
+    /* ===================== Inline-редактирование заголовка ===================== */
+
+    function startInlineEdit(card, paragraph) {
+        var currentText = paragraph.textContent;
+        var input = document.createElement('input');
+        input.type = 'text';
+        input.className = 'card-title-input';
+        input.value = currentText;
+        input.maxLength = 120;
+
+        paragraph.style.display = 'none';
+        card.querySelector('.card-body').insertBefore(input, paragraph.nextSibling || null);
+        input.focus();
+        input.select();
+
+        function finishEdit() {
+            var newText = input.value.trim();
+            if (newText && newText !== currentText) {
+                paragraph.textContent = newText;
+                card.dataset.title = newText;
+                saveCards();
+            }
+            input.replaceWith(paragraph);
+            paragraph.style.display = '';
+        }
+
+        input.addEventListener('blur', finishEdit);
+        input.addEventListener('keydown', function (e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                input.blur();
+            }
+            if (e.key === 'Escape') {
+                input.value = currentText;
+                input.blur();
+            }
+        });
+    }
+
+    /* ===================== Модальное окно ===================== */
+
+    var overlay = document.getElementById('modalOverlay');
+    var textarea = document.getElementById('modalDescription');
+    var saveBtn = overlay.querySelector('.modal-btn-primary');
+    var cancelBtn = overlay.querySelector('.modal-btn-secondary');
+    var closeBtn = overlay.querySelector('.modal-close');
+    var currentCard = null;
+
+    function openModal(card) {
+        currentCard = card;
+        textarea.value = card.dataset.description || '';
+        overlay.classList.add('active');
+        setTimeout(function () {
+            textarea.focus();
+        }, 100);
+    }
+
+    function closeModal() {
+        overlay.classList.remove('active');
+        currentCard = null;
+    }
+
+    saveBtn.addEventListener('click', function () {
+        if (!currentCard) return;
+        var desc = textarea.value.trim();
+        currentCard.dataset.description = desc;
+
+        /* Обновить индикатор */
+        var body = currentCard.querySelector('.card-body');
+        var existingIndicator = body.querySelector('.description-indicator');
+        if (desc && !existingIndicator) {
+            var indicator = document.createElement('div');
+            indicator.className = 'description-indicator';
+            indicator.title = 'Есть описание';
+            var paragraph = body.querySelector('p');
+            body.insertBefore(indicator, paragraph);
+        } else if (!desc && existingIndicator) {
+            existingIndicator.remove();
+        }
+
+        saveCards();
+        closeModal();
+    });
+
+    cancelBtn.addEventListener('click', closeModal);
+    closeBtn.addEventListener('click', closeModal);
+
+    overlay.addEventListener('click', function (e) {
+        if (e.target === overlay) closeModal();
+    });
+
+    document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape' && overlay.classList.contains('active')) {
+            closeModal();
+        }
+    });
 
     /* ===================== Drag & Drop ===================== */
 
@@ -100,13 +280,10 @@
         var draggedCard = document.querySelector('.card.dragging');
         if (draggedCard) {
             this.appendChild(draggedCard);
+            saveCards();
         }
     }
 
-    /* ===================== Инициализация перетаскивания ===================== */
-
-    // Делегирование: вешаем обработчики на доску, чтобы ловить
-    // и динамически добавленные карточки
     var board = document.querySelector('.board');
 
     board.addEventListener('dragstart', function (e) {
@@ -117,12 +294,32 @@
 
     board.addEventListener('dragend', function () {
         var card = document.querySelector('.card.dragging');
-        if (card) {
-            card.classList.remove('dragging');
-        }
+        if (card) card.classList.remove('dragging');
         document.querySelectorAll('.column').forEach(function (col) {
             col.classList.remove('drag-over');
         });
     });
+
+    /* ===================== Загрузка из LocalStorage ===================== */
+
+    function init() {
+        var cardsData = loadCards();
+        var columns = {
+            todo: document.querySelector('[data-status="todo"] .cards'),
+            progress: document.querySelector('[data-status="progress"] .cards'),
+            done: document.querySelector('[data-status="done"] .cards')
+        };
+
+        cardsData.forEach(function (data) {
+            var container = columns[data.column];
+            if (container) {
+                var card = createCard(data.text || 'Без названия', data.description || '');
+                card.dataset.id = data.id;
+                container.appendChild(card);
+            }
+        });
+    }
+
+    init();
 
 })();
